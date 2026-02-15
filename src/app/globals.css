@@ -1,26 +1,448 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* src/app/globals.css */
+
+/* ===== Reset / Base ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgba(255, 255, 255, 0.92);
+  background: #060816;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.45;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:root {
+  --bg: #070917;
+  --panel: rgba(255, 255, 255, 0.06);
+  --panel2: rgba(255, 255, 255, 0.08);
+  --stroke: rgba(255, 255, 255, 0.12);
+  --stroke2: rgba(255, 255, 255, 0.18);
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  --shadow2: 0 10px 24px rgba(0, 0, 0, 0.42);
+  --radius: 18px;
+
+  --pink: #ff2bd6;
+  --pink2: #b341ff;
+  --cyan: #46e6ff;
+}
+
+/* ===== Shell / Background ===== */
+.kl-shell {
+  min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  --mx: 0.5;
+  --my: 0.5;
+}
+
+.kl-bg {
+  position: absolute;
+  inset: -24px;
+  z-index: -3;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.1) contrast(1.05);
+  transform: translate3d(calc((var(--mx) - 0.5) * -10px),
+      calc((var(--my) - 0.5) * -10px),
+      0) scale(1.03);
+  transition: transform 120ms linear;
+}
+
+.kl-bgOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background: radial-gradient(1100px 700px at 60% 40%,
+      rgba(255, 43, 214, 0.18),
+      rgba(0, 0, 0, 0) 55%),
+    radial-gradient(900px 700px at 20% 25%,
+      rgba(70, 230, 255, 0.12),
+      rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, rgba(7, 9, 23, 0.72), rgba(7, 9, 23, 0.9));
+}
+
+.kl-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(900px 560px at 50% 30%,
+      rgba(0, 0, 0, 0.0),
+      rgba(0, 0, 0, 0.55) 70%,
+      rgba(0, 0, 0, 0.75));
+}
+
+.kl-content {
+  position: relative;
+  padding: 28px 16px 48px;
+}
+
+/* ===== Layout helpers ===== */
+.kl-container {
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+.kl-grid {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 820px) {
+  .kl-content {
+    padding: 36px 22px 64px;
+  }
+}
+
+/* ===== Glass UI ===== */
+.kl-card {
+  background: linear-gradient(180deg, var(--panel2), var(--panel));
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow2);
+  border-radius: var(--radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.kl-cardPad {
+  padding: 16px;
+}
+
+@media (min-width: 820px) {
+  .kl-cardPad {
+    padding: 18px;
+  }
+}
+
+/* ===== Header ===== */
+.kl-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.kl-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kl-brandTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kl-brandTitle strong {
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+
+.kl-brandTitle span {
+  font-size: 12px;
+  opacity: 0.72;
+}
+
+.kl-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ===== Buttons ===== */
+.kl-btn {
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  user-select: none;
+}
+
+.kl-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--stroke2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.kl-btnPrimary {
+  border: 1px solid rgba(255, 43, 214, 0.35);
+  background: linear-gradient(90deg, rgba(255, 43, 214, 0.9), rgba(179, 65, 255, 0.88));
+  box-shadow: 0 14px 40px rgba(255, 43, 214, 0.18);
+}
+
+.kl-btnPrimary:hover {
+  border-color: rgba(255, 43, 214, 0.55);
+}
+
+.kl-btnDanger {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.9;
+}
+
+/* ===== Forms ===== */
+.kl-field {
+  display: grid;
+  gap: 8px;
+}
+
+.kl-label {
+  font-size: 12px;
+  opacity: 0.78;
+}
+
+.kl-input {
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  outline: none;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.kl-input:focus {
+  border-color: rgba(255, 43, 214, 0.45);
+  box-shadow: 0 0 0 4px rgba(255, 43, 214, 0.12);
+}
+
+/* ===== Logo (SOLID) ===== */
+.kl-logo {
+  position: relative;
+  border-radius: 999px;
+  background: radial-gradient(60% 60% at 35% 30%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(145deg, rgba(255, 43, 214, 0.95), rgba(179, 65, 255, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 34px rgba(255, 43, 214, 0.22), 0 10px 24px rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.kl-logo__glyph {
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(-0.5px);
+}
+
+.kl-logo__ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  opacity: 0.65;
+}
+
+.kl-logo__glow {
+  position: absolute;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle at 35% 25%, rgba(70, 230, 255, 0.22), rgba(255, 43, 214, 0.0) 55%);
+  filter: blur(8px);
+  opacity: 0.7;
+}
+
+/* ===== Dashboard Grid ===== */
+.kl-hero {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 820px) {
+  .kl-hero {
+    grid-template-columns: 1.4fr 0.8fr;
+    align-items: stretch;
+  }
+}
+
+.kl-heroTitle {
+  font-size: 28px;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.kl-muted {
+  opacity: 0.78;
+  font-size: 13px;
+}
+
+.kl-statGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .kl-statGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 980px) {
+  .kl-statGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kl-stat {
+  display: grid;
+  gap: 6px;
+}
+
+.kl-statLabel {
+  font-size: 12px;
+  opacity: 0.72;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.kl-statValue {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.kl-footer {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+/* ===== Top Nav (Dashboard / App pages) ===== */
+.kl-nav {
+  position: sticky;
+  top: 12px;
+  z-index: 50;
+  margin-bottom: 18px;
+}
+
+.kl-navInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.kl-navLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.kl-navTitle {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kl-navTitle strong {
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kl-navTitle span {
+  font-size: 12px;
+  opacity: 0.72;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kl-navRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.kl-navLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.kl-navLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--stroke2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.kl-navActive {
+  border-color: rgba(255, 43, 214, 0.45);
+  background: linear-gradient(90deg, rgba(255, 43, 214, 0.26), rgba(179, 65, 255, 0.18));
+  box-shadow: 0 18px 50px rgba(255, 43, 214, 0.10);
+}
+
+.kl-navLogout {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.95;
+}
+
+/* Mobile: bar tetap rapih, link jadi compact */
+@media (max-width: 520px) {
+  .kl-navInner {
+    padding: 10px 10px;
+  }
+
+  .kl-navTitle strong {
+    font-size: 13px;
+  }
+
+  .kl-navRight {
+    gap: 6px;
+  }
+
+  .kl-navLink {
+    padding: 9px 10px;
+    font-size: 12px;
+  }
 }
