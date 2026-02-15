@@ -1,49 +1,48 @@
-// src/lib/srs.ts
-export type Rating = "again" | "hard" | "good" | "easy";
+export enum SRSGrade {
+    AGAIN = 0,
+    HARD = 1,
+    GOOD = 2,
+    EASY = 3,
+}
 
-export type SrsState = {
-    ease: number;        // default 2.5
-    interval_days: number;
-    reps: number;
-    lapses: number;
-};
+export interface SRSState {
+    interval: number; // days
+    repetition: number;
+    easeFactor: number;
+}
 
-export function nextSrs(state: SrsState, rating: Rating): SrsState & { nextIntervalDays: number } {
-    let { ease, interval_days, reps, lapses } = state;
+/**
+ * SuperMemo-2 Style Algorithm (Anki-like)
+ */
+export function calculateNextReview(current: SRSState, grade: SRSGrade): SRSState {
+    let { interval, repetition, easeFactor } = current;
 
-    // clamp ease
-    const clampEase = (x: number) => Math.max(1.3, Math.min(3.2, x));
-
-    if (rating === "again") {
-        lapses += 1;
-        reps = 0;
-        interval_days = 0;
-        ease = clampEase(ease - 0.2);
-        return { ease, interval_days, reps, lapses, nextIntervalDays: 0 };
+    if (grade === SRSGrade.AGAIN) {
+        return {
+            interval: 0, // < 1 day (minutes)
+            repetition: 0,
+            easeFactor: Math.max(1.3, easeFactor - 0.2),
+        };
     }
 
-    reps += 1;
-
-    if (rating === "hard") {
-        ease = clampEase(ease - 0.15);
-        const next = interval_days <= 1 ? 1 : Math.max(1, Math.round(interval_days * 1.2));
-        return { ease, interval_days: next, reps, lapses, nextIntervalDays: next };
+    // Success (Hard, Good, Easy)
+    if (repetition === 0) {
+        interval = 1;
+    } else if (repetition === 1) {
+        interval = 6;
+    } else {
+        interval = Math.round(interval * easeFactor);
     }
 
-    if (rating === "good") {
-        ease = clampEase(ease);
-        const next =
-            interval_days === 0 ? 1 :
-                interval_days === 1 ? 3 :
-                    Math.max(1, Math.round(interval_days * ease));
-        return { ease, interval_days: next, reps, lapses, nextIntervalDays: next };
-    }
+    repetition += 1;
 
-    // easy
-    ease = clampEase(ease + 0.15);
-    const next =
-        interval_days === 0 ? 2 :
-            interval_days === 1 ? 4 :
-                Math.max(2, Math.round(interval_days * (ease + 0.15)));
-    return { ease, interval_days: next, reps, lapses, nextIntervalDays: next };
+    // Ease adjustments
+    if (grade === SRSGrade.HARD) {
+        easeFactor = Math.max(1.3, easeFactor - 0.15);
+    } else if (grade === SRSGrade.EASY) {
+        easeFactor += 0.15;
+    }
+    // Good: easeFactor unchanged
+
+    return { interval, repetition, easeFactor };
 }
