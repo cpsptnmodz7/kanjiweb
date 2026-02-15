@@ -191,27 +191,41 @@ export default function ReviewPage() {
         const d = todayISODate();
 
         // progress increment
-        await supabase.rpc("increment_daily_progress", {
-            p_user_id: uid,
-            p_date: d,
-            p_reviews: 1,
-            p_correct: correct ? 1 : 0,
-            p_minutes: 0,
-        }).catch(async () => {
+        // progress increment with fallback
+        try {
+            const { error } = await supabase.rpc("increment_daily_progress", {
+                p_user_id: uid,
+                p_date: d,
+                p_reviews: 1,
+                p_correct: correct ? 1 : 0,
+                p_minutes: 0,
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error("RPC failed, falling back to manual update", err);
             // fallback kalau belum buat RPC: update manual
             const { data } = await supabase
                 .from("daily_progress")
                 .select("reviews_done,correct_done,minutes_done")
                 .eq("user_id", uid)
                 .eq("prog_date", d)
-                .single();
+                .maybeSingle();
 
-            const rd = (data?.reviews_done ?? 0) + 1;
-            const cd = (data?.correct_done ?? 0) + (correct ? 1 : 0);
-            await supabase
-                .from("daily_progress")
-                .upsert({ user_id: uid, prog_date: d, reviews_done: rd, correct_done: cd, minutes_done: data?.minutes_done ?? 0 }, { onConflict: "user_id,prog_date" });
-        });
+            const curReviews = data?.reviews_done ?? 0;
+            const curCorrect = data?.correct_done ?? 0;
+            const curMinutes = data?.minutes_done ?? 0;
+
+            await supabase.from("daily_progress").upsert(
+                {
+                    user_id: uid,
+                    prog_date: d,
+                    reviews_done: curReviews + 1,
+                    correct_done: curCorrect + (correct ? 1 : 0),
+                    minutes_done: curMinutes,
+                },
+                { onConflict: "user_id,prog_date" }
+            );
+        }
 
         // streak + xp (simple)
         const { data: stats } = await supabase

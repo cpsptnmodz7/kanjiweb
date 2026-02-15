@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -37,7 +37,8 @@ function shuffle<T>(arr: T[]) {
     return a;
 }
 
-export default function QuizPage() {
+// Internal component using searchParams
+function QuizContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const setId = searchParams.get('set') || '';
@@ -596,5 +597,18 @@ export default function QuizPage() {
                 </div>
             </div>
         </Shell>
+    );
+}
+
+// Export default wrapping content in Suspense
+export default function QuizPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen w-full flex items-center justify-center text-white/50">
+                Loading quiz...
+            </div>
+        }>
+            <QuizContent />
+        </Suspense>
     );
 }
