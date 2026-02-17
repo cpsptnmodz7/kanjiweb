@@ -1,127 +1,60 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import { getOpenAI } from "@/lib/openai";
 
 export const runtime = "nodejs";
 
-type BudgetInput = {
+type Body = {
     currency?: string;
-    monthlyIncome?: number;
-    monthlyTarget?: number;
-    totalSaved?: number;
-    monthSaved?: number;
-    transactions?: Array<{
-        amount: number;
-        note?: string;
-        date?: string;
-    }>;
-    goals?: Array<{
-        name: string;
-        target: number;
-        saved: number;
-        deadline?: string;
-    }>;
+    goals: Array<{ title: string; monthly_target: number; current_month_net: number }>;
+    monthSummary: { income?: number; fixedCosts?: number; variableCosts?: number };
+    userNote?: string;
 };
-
-function clampNumber(n: unknown, fallback = 0) {
-    const x = Number(n);
-    return Number.isFinite(x) ? x : fallback;
-}
 
 export async function POST(req: Request) {
     try {
-        const body = (await req.json()) as BudgetInput;
+        const body = (await req.json()) as Body;
 
-        const currency = (body.currency || "IDR").toUpperCase();
-        const monthlyIncome = clampNumber(body.monthlyIncome, 0);
-        const monthlyTarget = clampNumber(body.monthlyTarget, 0);
-        const totalSaved = clampNumber(body.totalSaved, 0);
-        const monthSaved = clampNumber(body.monthSaved, 0);
+        const openai = getOpenAI();
+        const maxTokens = Number(process.env.AI_MAX_TOKENS || "700");
 
-        const transactions = Array.isArray(body.transactions) ? body.transactions.slice(0, 200) : [];
-        const goals = Array.isArray(body.goals) ? body.goals.slice(0, 20) : [];
-
-        if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json(
-                { ok: false, error: "OPENAI_API_KEY belum diset di environment." },
-                { status: 500 }
-            );
-        }
-
-        const client = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-
-        const input = `
-Kamu adalah "AI Budgeting Coach" untuk aplikasi tabungan (celengan) berbahasa Indonesia.
-Tujuan: memberi saran yang realistis, tidak menghakimi, dan bisa langsung dilakukan.
-
-DATA USER (ringkas):
-- currency: ${currency}
-- monthlyIncome: ${monthlyIncome}
-- monthlyTarget: ${monthlyTarget}
-- totalSaved: ${totalSaved}
-- monthSaved (net): ${monthSaved}
-
-TRANSAKSI TERAKHIR (max 200):
-${JSON.stringify(transactions)}
-
-GOALS (max 20):
-${JSON.stringify(goals)}
-
-INSTRUKSI OUTPUT:
-Balas dalam JSON valid, TANPA markdown, dengan schema:
+        const prompt = `
+Kamu adalah AI budgeting assistant untuk aplikasi tabungan "Kanji Laopu".
+Output HARUS JSON valid saja:
 {
-  "summary": string,
-  "health_score": number,        // 0-100
-  "insights": string[],          // 3-7 poin
-  "next_actions": {              // 3-7 langkah
-    "title": string,
-    "why": string,
-    "how": string
-  }[],
-  "budget_plan": {               // rencana sederhana
-    "needs_pct": number,
-    "wants_pct": number,
-    "savings_pct": number,
-    "notes": string
-  },
-  "goal_strategy": string,       // strategi prioritas goal
-  "warnings": string[]           // opsional, boleh kosong
+  "headline": string,
+  "plan": { "safeMonthlySaving": number, "suggestedSplit": [{ "goal": string, "amount": number }] },
+  "tips": string[],
+  "warnings": string[],
+  "nextActions": string[]
 }
 
-Aturan:
-- Kalau monthlyIncome=0, jangan memaksa bikin % ketat; beri saran “mulai dari nominal kecil”.
-- Kalau ada banyak transaksi negatif (ambil), beri saran kontrol pengeluaran.
-- Prioritaskan target bulanan + goal terdekat.
-`;
+Data:
+- Currency: ${body.currency || "IDR"}
+- Goals: ${JSON.stringify(body.goals || [])}
+- MonthSummary: ${JSON.stringify(body.monthSummary || {})}
+- UserNote: ${body.userNote || ""}
 
-        const completion = await client.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                { role: "system", content: "You are a helpful budgeting assistant that outputs JSON." },
-                { role: "user", content: input },
-            ],
-            response_format: { type: "json_object" },
+Aturan:
+- safeMonthlySaving jangan melebihi income - fixedCosts - 10% buffer.
+- Split goal proporsional terhadap target tapi prioritaskan goal yang paling kecil gap-nya (target - current_month_net).
+`.trim();
+
+        const resp = await openai.responses.create({
+            model: "gpt-4.1-mini",
+            input: prompt,
+            max_output_tokens: maxTokens,
         });
 
-        const text = completion.choices[0].message.content?.trim() ?? "";
-
+        const text = resp.output_text?.trim() || "{}";
+        let json: any;
         try {
-            const json = JSON.parse(text);
-            return NextResponse.json({ ok: true, data: json });
+            json = JSON.parse(text);
         } catch {
-            return NextResponse.json({
-                ok: true,
-                data: {
-                    summary: "AI menghasilkan output non-JSON. Coba ulangi.",
-                    raw: text,
-                },
-            });
+            json = { headline: "Saran budget siap.", plan: { safeMonthlySaving: 0, suggestedSplit: [] }, tips: [], warnings: [], nextActions: [], raw: text };
         }
-    } catch (err: unknown) {
-        return NextResponse.json(
-            { ok: false, error: (err as Error)?.message || "Unknown error" },
-            { status: 500 }
-        );
+
+        return NextResponse.json(json);
+    } catch (e: any) {
+        return NextResponse.json({ error: e?.message || "AI error" }, { status: 500 });
     }
 }

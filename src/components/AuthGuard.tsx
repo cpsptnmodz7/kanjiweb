@@ -1,47 +1,51 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+
+const PUBLIC_ROUTES = ["/login"];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const router = useRouter();
-    const [checking, setChecking] = useState(true);
+    const pathname = usePathname();
+    const [ready, setReady] = useState(false);
 
     useEffect(() => {
         let mounted = true;
 
-        const run = async () => {
+        async function run() {
+            const isPublic = PUBLIC_ROUTES.includes(pathname || "");
             const { data } = await supabase.auth.getSession();
-            const session = data.session;
+            const hasSession = !!data.session;
 
-            if (!mounted) return;
+            if (!isPublic && !hasSession) router.replace("/login");
+            if (isPublic && hasSession) router.replace("/");
 
-            if (!session?.user) {
-                router.replace("/login");
-                return;
-            }
-
-            setChecking(false);
-        };
+            if (mounted) setReady(true);
+        }
 
         run();
 
-        const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (!session?.user) router.replace("/login");
+        const { data: sub } = supabase.auth.onAuthStateChange(() => {
+            // re-check simple
+            run();
         });
 
         return () => {
             mounted = false;
             sub.subscription.unsubscribe();
         };
-    }, [router]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname]);
 
-    if (checking) {
+    if (!ready) {
         return (
-            <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4">
-                <div className="text-sm opacity-70">Checking session…</div>
-            </main>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="glass p-6 rounded-2xl text-white/80">
+                    Loading…
+                </div>
+            </div>
         );
     }
 

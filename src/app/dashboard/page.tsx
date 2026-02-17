@@ -1,135 +1,82 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { ensureProfile } from "@/lib/progress";
 
 export default function DashboardPage() {
     const router = useRouter();
-
-    const [email, setEmail] = useState<string>("");
+    const [xp, setXp] = useState(0);
+    const [level, setLevel] = useState(1);
+    const [coins, setCoins] = useState(0);
+    const [streak, setStreak] = useState(0);
 
     useEffect(() => {
-        async function checkUser() {
+        (async () => {
             const { data } = await supabase.auth.getSession();
-
-            if (!data.session) {
-                router.push("/login");
+            const session = data.session;
+            if (!session) {
+                router.replace("/login");
                 return;
             }
-
-            setEmail(data.session.user.email || "");
-        }
-        checkUser();
+            const p = await ensureProfile(session.user.id);
+            setXp(p.xp ?? 0);
+            setLevel(p.level ?? 1);
+            setCoins(p.coins ?? 0);
+            setStreak(p.streak_count ?? 0);
+        })();
     }, [router]);
 
-    async function logout() {
-        await supabase.auth.signOut();
-        router.push("/login");
-    }
-
     return (
-        <div className="min-h-screen p-6 text-white">
-            {/* BACKGROUND */}
-            <div className="fixed inset-0 -z-10">
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        backgroundImage: "url(/anime-wallpaper.jpg)",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
-                />
-                <div className="absolute inset-0 bg-black/70" />
-            </div>
-
-            {/* NAVBAR */}
-            <div className="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-lg">
-                <div className="text-center md:text-left">
-                    <h1 className="text-lg font-semibold">Kanji Laopu</h1>
-                    <p className="text-xs text-white/60">{email}</p>
+        <div className="grid cols-2">
+            <div className="glass p-6">
+                <div className="h1">Dashboard</div>
+                <div className="small" style={{ marginTop: 6 }}>
+                    Ringkasan progress kamu hari ini.
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-2">
-                    <button
-                        onClick={() => router.push("/")}
-                        className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
-                    >
-                        Home
-                    </button>
+                <div className="grid cols-2" style={{ marginTop: 14 }}>
+                    <div className="card p-5">
+                        <div className="small">Level</div>
+                        <div style={{ fontSize: 34, fontWeight: 900, marginTop: 6 }}>{level}</div>
+                    </div>
+                    <div className="card p-5">
+                        <div className="small">XP</div>
+                        <div style={{ fontSize: 34, fontWeight: 900, marginTop: 6 }}>{xp}</div>
+                    </div>
+                    <div className="card p-5">
+                        <div className="small">Streak</div>
+                        <div style={{ fontSize: 34, fontWeight: 900, marginTop: 6 }}>{streak}🔥</div>
+                    </div>
+                    <div className="card p-5">
+                        <div className="small">Coins</div>
+                        <div style={{ fontSize: 34, fontWeight: 900, marginTop: 6 }}>{coins}</div>
+                    </div>
+                </div>
 
-                    <button
-                        onClick={() => router.push("/quiz")}
-                        className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
-                    >
-                        Quiz
-                    </button>
-
-                    <button
-                        onClick={() => router.push("/review")}
-                        className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
-                    >
-                        Review
-                    </button>
-
-                    {/* 👉 CELENGAN */}
-                    <button
-                        onClick={() => router.push("/savings")}
-                        className="rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-2 text-sm font-semibold text-black shadow-lg hover:opacity-90"
-                    >
-                        💰 Celengan
-                    </button>
-
-                    <button
-                        onClick={logout}
-                        className="rounded-xl bg-red-500 px-4 py-2 text-sm hover:bg-red-600"
-                    >
-                        Logout
-                    </button>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+                    <button className="btn btn-primary" onClick={() => router.push("/missions")}>Daily Missions</button>
+                    <button className="btn" onClick={() => router.push("/shop")}>Reward Shop</button>
+                    <button className="btn" onClick={() => router.push("/voice")}>Voice Class</button>
                 </div>
             </div>
 
-            {/* CONTENT */}
-            <div className="grid gap-4 md:grid-cols-3">
-                {/* CARD 1 */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-lg">
-                    <h2 className="text-lg font-semibold">Start Quiz</h2>
-                    <p className="text-sm text-white/60">Latihan kanji sekarang</p>
-
-                    <button
-                        onClick={() => router.push("/quiz")}
-                        className="mt-4 w-full rounded-xl bg-pink-500 py-2 text-sm font-semibold hover:bg-pink-600"
-                    >
-                        Start Quiz
-                    </button>
+            <div className="grid" style={{ alignContent: "start" }}>
+                <div className="card p-5">
+                    <div className="h2">Next Up</div>
+                    <div className="small" style={{ marginTop: 10 }}>
+                        • Selesaikan misi harian untuk reward <br />
+                        • Naikkan streak untuk badge <br />
+                        • Join voice class untuk bonus XP
+                    </div>
                 </div>
 
-                {/* CARD 2 */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-lg">
-                    <h2 className="text-lg font-semibold">Review</h2>
-                    <p className="text-sm text-white/60">Ulangi kanji</p>
-
-                    <button
-                        onClick={() => router.push("/review")}
-                        className="mt-4 w-full rounded-xl bg-blue-500 py-2 text-sm font-semibold hover:bg-blue-600"
-                    >
-                        Review
-                    </button>
-                </div>
-
-                {/* CARD 3 */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-lg">
-                    <h2 className="text-lg font-semibold">Celengan</h2>
-                    <p className="text-sm text-white/60">
-                        Lihat tabungan kamu
-                    </p>
-
-                    <button
-                        onClick={() => router.push("/savings")}
-                        className="mt-4 w-full rounded-xl bg-yellow-400 py-2 text-sm font-semibold text-black hover:bg-yellow-500"
-                    >
-                        💰 Buka Celengan
-                    </button>
+                <div className="card p-5">
+                    <div className="h2">Badges</div>
+                    <div className="small" style={{ marginTop: 10 }}>
+                        (Auto unlock: streak 3/7/30, XP 500/2000)
+                    </div>
                 </div>
             </div>
         </div>

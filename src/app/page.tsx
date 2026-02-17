@@ -1,123 +1,89 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Logo from "@/components/Logo";
 import { supabase } from "@/lib/supabaseClient";
+
+function usernameFromEmail(email?: string | null) {
+  if (!email) return "User";
+  return (email.split("@")[0] || "User").replace(/\./g, " ");
+}
 
 export default function HomePage() {
   const router = useRouter();
-  const [email, setEmail] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-
-  const username = useMemo(() => {
-    if (!email) return "";
-    return email.split("@")[0] || email;
-  }, [email]);
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!mounted) return;
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, []);
 
-      if (!data?.user) {
-        router.replace("/login");
-        return;
-      }
-
-      setEmail(data.user.email ?? "");
-      setLoading(false);
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
-
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
-
-  if (loading) {
-    return (
-      <div className="kl-container">
-        <div className="kl-card kl-cardPad">Loading...</div>
-      </div>
-    );
-  }
+  const username = usernameFromEmail(email);
 
   return (
-    <div className="kl-container">
-      <div className="kl-topbar">
-        <div className="kl-brand">
-          <Logo size={44} />
-          <div className="kl-brandTitle">
-            <strong>Kanji Laopu</strong>
-            <span>Good learning, {username}</span>
+    <div className="grid cols-3">
+      <div className="glass p-6">
+        <div className="badge">✨ Today focus</div>
+        <div style={{ marginTop: 10 }} className="h1">
+          Keep your streak alive
+        </div>
+        <div className="small" style={{ marginTop: 8, lineHeight: 1.5 }}>
+          Halo <b>{username}</b> — mulai dari review yang due hari ini, lalu lanjut quiz untuk memperkuat ingatan.
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
+          <button className="btn btn-primary" onClick={() => router.push("/review")}>Start Review</button>
+          <button className="btn" onClick={() => router.push("/quiz")}>Free Quiz</button>
+          <button className="btn" onClick={() => router.push("/dashboard")}>Dashboard</button>
+          <button className="btn" onClick={() => router.push("/savings")}>Celengan</button>
+        </div>
+
+        <hr className="sep" />
+
+        <div className="grid cols-2">
+          <div className="card p-5">
+            <div className="h2">JLPT Levels</div>
+            <div className="small" style={{ marginTop: 6 }}>Progress belajar per level N5–N1.</div>
+            <button className="btn" style={{ marginTop: 10 }} onClick={() => router.push("/quiz?set=N5")}>Open</button>
+          </div>
+          <div className="card p-5">
+            <div className="h2">Voice Class (soon)</div>
+            <div className="small" style={{ marginTop: 6 }}>Ruang belajar bareng (LiveKit).</div>
+            <button className="btn" style={{ marginTop: 10 }} disabled>Coming soon</button>
           </div>
         </div>
 
-        <div className="kl-actions">
-          <button className="kl-btn kl-btnDanger" onClick={logout}>
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div className="kl-hero">
-        <div className="kl-card kl-cardPad">
-          <p className="kl-muted" style={{ margin: 0 }}>
-            Today focus
-          </p>
-          <h1 className="kl-heroTitle">Keep your streak alive ✨</h1>
-          <p className="kl-muted" style={{ marginTop: 6 }}>
-            Mulai dari review yang due hari ini, lalu lanjut quiz untuk memperkuat ingatan.
-          </p>
-
-          <div className="kl-actions" style={{ marginTop: 14, justifyContent: "flex-start" }}>
-            <Link className="kl-btn kl-btnPrimary" href="/review">
-              Start Review
-            </Link>
-            <Link className="kl-btn" href="/quiz">
-              Free Quiz
-            </Link>
-            <Link className="kl-btn" href="/dashboard">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-
-        <div className="kl-grid">
-          <div className="kl-card kl-cardPad">
-            <div className="kl-stat">
-              <div className="kl-statLabel">Due today</div>
-              <div className="kl-statValue">4</div>
-              <div className="kl-muted">kanji harus direview</div>
-            </div>
-          </div>
-
-          <div className="kl-card kl-cardPad">
-            <div className="kl-stat">
-              <div className="kl-statLabel">7d Accuracy</div>
-              <div className="kl-statValue">0%</div>
-              <div className="kl-muted">perkiraan (sementara)</div>
-            </div>
-          </div>
-
-          <div className="kl-card kl-cardPad">
-            <div className="kl-stat">
-              <div className="kl-statLabel">Streak</div>
-              <div className="kl-statValue">0 hari</div>
-              <div className="kl-muted">review berturut-turut</div>
-            </div>
-          </div>
+        <div className="small" style={{ textAlign: "center", marginTop: 20 }}>
+          Handcrafted with ❤️ — Kanji Laopu
         </div>
       </div>
 
-      <div className="kl-footer">© {new Date().getFullYear()} Kanji Laopu • Handcrafted with 💗</div>
+      {/* Right cards */}
+      <div className="grid" style={{ alignContent: "start" }}>
+        <div className="card p-5">
+          <div className="small">Due today</div>
+          <div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>—</div>
+          <div className="small">akan tampil saat data review siap</div>
+        </div>
+        <div className="card p-5">
+          <div className="small">7d Accuracy</div>
+          <div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>—</div>
+        </div>
+        <div className="card p-5">
+          <div className="small">Streak</div>
+          <div style={{ fontSize: 24, fontWeight: 900, marginTop: 6 }}>—</div>
+        </div>
+      </div>
+
+      <div className="grid" style={{ alignContent: "start" }}>
+        <div className="card p-5">
+          <div className="h2">Quick Actions</div>
+          <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+            <button className="btn" onClick={() => router.push("/dashboard")}>Open Dashboard</button>
+            <button className="btn" onClick={() => router.push("/quiz")}>Start Quiz</button>
+            <button className="btn" onClick={() => router.push("/review")}>Start Review</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
