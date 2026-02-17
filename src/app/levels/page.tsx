@@ -17,7 +17,7 @@ const JLPT_LEVELS = ["N5", "N4", "N3", "N2", "N1"];
 export default function LevelsPage() {
     const router = useRouter();
     const [stats, setStats] = useState<LevelStats[]>([]);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const [msg, setMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
@@ -39,13 +39,14 @@ export default function LevelsPage() {
             const levelMap = new Map<string, { total: number; userCount: number }>();
             JLPT_LEVELS.forEach(lvl => levelMap.set(lvl, { total: 0, userCount: 0 }));
 
-            (allKanji ?? []).forEach((k: any) => {
+            (allKanji ?? []).forEach((k: { level: string }) => {
                 if (levelMap.has(k.level)) {
                     levelMap.get(k.level)!.total += 1;
                 }
             });
 
-            (userKanji ?? []).forEach((uk: any) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((userKanji as any[]) ?? []).forEach((uk: { kanji: { level: string } }) => {
                 const lvl = uk.kanji?.level;
                 if (lvl && levelMap.has(lvl)) {
                     levelMap.get(lvl)!.userCount += 1;
@@ -59,7 +60,7 @@ export default function LevelsPage() {
             }));
 
             setStats(finalStats);
-            setLoading(false);
+            // setLoading(false);
         };
 
         fetchStats();
@@ -121,7 +122,7 @@ export default function LevelsPage() {
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {stats.map((s) => {
                             const progress = s.total > 0 ? Math.round((s.userCount / s.total) * 100) : 0;
-                            const isComplete = s.userCount >= s.total && s.total > 0;
+                            // const isComplete = s.userCount >= s.total && s.total > 0;
 
                             return (
                                 <div key={s.level} className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur shadow-xl">

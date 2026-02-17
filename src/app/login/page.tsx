@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-function getNiceNameFromUser(user: any) {
+function getNiceNameFromUser(user: { user_metadata?: { username?: string; full_name?: string; name?: string }; email?: string }) {
     const metaName =
         user?.user_metadata?.username ||
         user?.user_metadata?.full_name ||
@@ -32,14 +32,10 @@ type Phase =
     | "helloHold"
     | "helloOut";
 
-function IosWelcomeA({ open, username }: { open: boolean; username: string }) {
+function IosWelcomeA({ username }: { username: string }) {
     const [phase, setPhase] = useState<Phase>("off");
 
     useEffect(() => {
-        if (!open) {
-            setPhase("off");
-            return;
-        }
         let cancelled = false;
 
         (async () => {
@@ -70,9 +66,7 @@ function IosWelcomeA({ open, username }: { open: boolean; username: string }) {
         return () => {
             cancelled = true;
         };
-    }, [open]);
-
-    if (!open) return null;
+    }, []);
 
     const brandVisible = phase === "brandIn" || phase === "brandHold" || phase === "brandOut";
     const helloVisible = phase === "helloIn" || phase === "helloHold" || phase === "helloOut";
@@ -292,7 +286,7 @@ export default function LoginPage() {
         };
     }, [router]);
 
-    async function playWelcomeThenGo(user: any) {
+    async function playWelcomeThenGo(user: { user_metadata?: { username?: string; full_name?: string; name?: string }; email?: string }) {
         setWelcomeName(getNiceNameFromUser(user));
         setWelcomeOpen(true);
         await sleep(2100);
@@ -307,8 +301,9 @@ export default function LoginPage() {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
             await playWelcomeThenGo(data.user);
-        } catch (err: any) {
-            setErrorMsg(err?.message ?? "Login gagal.");
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Login gagal.";
+            setErrorMsg(msg);
         } finally {
             setLoading(false);
         }
@@ -332,9 +327,12 @@ export default function LoginPage() {
                 return;
             }
 
-            await playWelcomeThenGo(data.user);
-        } catch (err: any) {
-            setErrorMsg(err?.message ?? "Register gagal.");
+            if (data.user) {
+                await playWelcomeThenGo(data.user);
+            }
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Register gagal.";
+            setErrorMsg(msg);
         } finally {
             setLoading(false);
         }
@@ -342,7 +340,7 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 py-10">
-            <IosWelcomeA open={welcomeOpen} username={welcomeName} />
+            {welcomeOpen && <IosWelcomeA username={welcomeName} />}
 
             <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.06] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.55)] p-7 md:p-8">
                 <div className="mb-6 text-center">
@@ -358,8 +356,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("login")}
                         className={`px-4 py-2 rounded-2xl border text-sm transition ${mode === "login"
-                                ? "bg-white/10 border-white/15"
-                                : "bg-transparent border-white/10 text-white/70 hover:bg-white/5"
+                            ? "bg-white/10 border-white/15"
+                            : "bg-transparent border-white/10 text-white/70 hover:bg-white/5"
                             }`}
                     >
                         Login
@@ -368,8 +366,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("register")}
                         className={`px-4 py-2 rounded-2xl border text-sm transition ${mode === "register"
-                                ? "bg-white/10 border-white/15"
-                                : "bg-transparent border-white/10 text-white/70 hover:bg-white/5"
+                            ? "bg-white/10 border-white/15"
+                            : "bg-transparent border-white/10 text-white/70 hover:bg-white/5"
                             }`}
                     >
                         Register
@@ -406,8 +404,8 @@ export default function LoginPage() {
                     <button
                         disabled={loading}
                         className={`w-full rounded-2xl py-3 font-medium transition ${loading
-                                ? "bg-white/10 text-white/60 cursor-not-allowed border border-white/10"
-                                : "bg-gradient-to-r from-fuchsia-500/90 to-pink-500/90 hover:from-fuchsia-500 hover:to-pink-500 text-white shadow-[0_18px_70px_rgba(255,0,160,0.22)]"
+                            ? "bg-white/10 text-white/60 cursor-not-allowed border border-white/10"
+                            : "bg-gradient-to-r from-fuchsia-500/90 to-pink-500/90 hover:from-fuchsia-500 hover:to-pink-500 text-white shadow-[0_18px_70px_rgba(255,0,160,0.22)]"
                             }`}
                     >
                         {loading ? "Please wait..." : mode === "login" ? "Login" : "Register"}

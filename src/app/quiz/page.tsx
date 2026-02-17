@@ -24,9 +24,7 @@ function cn(...xs: Array<string | false | null | undefined>) {
     return xs.filter(Boolean).join(' ');
 }
 
-function pickRandom<T>(arr: T[]): T {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
+
 
 function shuffle<T>(arr: T[]) {
     const a = [...arr];
@@ -118,7 +116,6 @@ function QuizContent() {
 
     useEffect(() => {
         if (!setId) loadSets();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setId]);
 
     // ---------- CREATE SET ----------
@@ -214,7 +211,7 @@ function QuizContent() {
             return;
         }
 
-        const ids = (items ?? []).map((x: any) => x.kanji_id);
+        const ids = (items ?? []).map((x: { kanji_id: string }) => x.kanji_id);
 
         if (ids.length < 4) {
             setPool([]);
@@ -244,7 +241,6 @@ function QuizContent() {
     useEffect(() => {
         if (!setId) return;
         loadQuizBySet(setId);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [setId]);
 
     // ---------- QUIZ ACTIONS ----------

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import supabase from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -10,19 +10,18 @@ export default function DashboardPage() {
     const [email, setEmail] = useState<string>("");
 
     useEffect(() => {
-        checkUser();
-    }, []);
+        async function checkUser() {
+            const { data } = await supabase.auth.getSession();
 
-    async function checkUser() {
-        const { data } = await supabase.auth.getSession();
+            if (!data.session) {
+                router.push("/login");
+                return;
+            }
 
-        if (!data.session) {
-            router.push("/login");
-            return;
+            setEmail(data.session.user.email || "");
         }
-
-        setEmail(data.session.user.email || "");
-    }
+        checkUser();
+    }, [router]);
 
     async function logout() {
         await supabase.auth.signOut();
@@ -45,13 +44,13 @@ export default function DashboardPage() {
             </div>
 
             {/* NAVBAR */}
-            <div className="mb-6 flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-lg">
-                <div>
+            <div className="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur-lg">
+                <div className="text-center md:text-left">
                     <h1 className="text-lg font-semibold">Kanji Laopu</h1>
                     <p className="text-xs text-white/60">{email}</p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                     <button
                         onClick={() => router.push("/")}
                         className="rounded-xl bg-white/10 px-4 py-2 text-sm hover:bg-white/20"

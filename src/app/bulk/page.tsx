@@ -164,7 +164,7 @@ N5 Time,今`
             if (e0) throw e0;
 
             const nameToId = new Map<string, string>();
-            for (const s of (existingSets ?? []) as any[]) {
+            for (const s of (existingSets ?? []) as { name: string; id: string }[]) {
                 nameToId.set(String(s.name).trim(), String(s.id));
             }
 
@@ -189,7 +189,7 @@ N5 Time,今`
 
                 if (e1) throw e1;
 
-                for (const s of (created ?? []) as any[]) {
+                for (const s of (created ?? []) as { name: string; id: string }[]) {
                     nameToId.set(String(s.name).trim(), String(s.id));
                 }
             }
@@ -206,7 +206,7 @@ N5 Time,今`
 
             if (e2) throw e2;
 
-            const existKanji = new Set((existKanjiRows ?? []).map((r: any) => String(r.id)));
+            const existKanji = new Set((existKanjiRows ?? []).map((r: { id: string }) => String(r.id)));
 
             // 4) build rows untuk quiz_set_items
             const itemRows: Array<{ set_id: string; kanji_id: string }> = [];

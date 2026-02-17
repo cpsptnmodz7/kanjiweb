@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { calculateNextReview, SRSGrade } from "@/lib/srs";
@@ -35,7 +35,7 @@ export default function ReviewPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [cards, setCards] = useState<ReviewCard[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex] = useState(0);
     const [showAnswer, setShowAnswer] = useState(false);
     const [sessionUserId, setSessionUserId] = useState<string | null>(null);
 
@@ -234,7 +234,7 @@ export default function ReviewPage() {
         let streak = stats?.streak ?? 0;
         const lastDate = stats?.last_active_date;
         const xp = stats?.xp ?? 0;
-        const level = stats?.level ?? 1;
+        // const level = stats?.level ?? 1;
 
         if (lastDate !== d) {
             // cek kemarin
@@ -404,7 +404,7 @@ export default function ReviewPage() {
     );
 }
 
-function GradeButton({ grade, label, sub, color, onClick }: { grade: unknown, label: string, sub: string, color: string, onClick: () => void }) {
+function GradeButton({ label, sub, color, onClick }: { grade: unknown, label: string, sub: string, color: string, onClick: () => void }) {
     return (
         <button
             onClick={onClick}

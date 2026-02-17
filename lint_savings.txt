@@ -1,0 +1,16 @@
+﻿
+> kanji-web@0.1.0 lint
+> eslint
+
+
+C:\Users\TODAY TECH\Documents\My Web Sites\vtube web\kanji-web\src\app\savings\page.tsx
+   66:24  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  271:11  warning  'pace' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  349:41  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  366:41  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  465:88  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  486:14  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  498:43  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+Γ£û 7 problems (6 errors, 1 warning)
+

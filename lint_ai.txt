@@ -1,0 +1,18 @@
+﻿
+> kanji-web@0.1.0 lint
+> eslint
+
+
+C:\Users\TODAY TECH\Documents\My Web Sites\vtube web\kanji-web\src\app\api\ai\budget\route.ts
+   25:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\TODAY TECH\Documents\My Web Sites\vtube web\kanji-web\src\app\savings\page.tsx
+   77:10   warning  'daysInMonth' is defined but never used                          @typescript-eslint/no-unused-vars
+   81:10   warning  'dayOfMonth' is defined but never used                           @typescript-eslint/no-unused-vars
+  444:23   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  867:106  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  867:123  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+Γ£û 7 problems (5 errors, 2 warnings)
+
